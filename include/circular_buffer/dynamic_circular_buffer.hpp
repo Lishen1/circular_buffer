@@ -60,7 +60,7 @@ namespace jm {
 
     explicit
       dynamic_circular_buffer(size_type count)
-      : _head(0), _tail(count - 1), _size(count), _buffer(count)
+      : _head(0), _tail(count - 1), _size(0), _buffer(count)
     {
     }
 
@@ -151,13 +151,20 @@ namespace jm {
 
     /// capacity
     JM_CB_CONSTEXPR void reserve(size_type new_cap) {
-      _buffer.reserve(new_cap);
-      resize(new_cap);
+      _size = 0;
+      _head = 1;
+      _tail = 0;
+
+      _buffer.resize(new_cap);
     }
 
     JM_CB_CONSTEXPR void resize(size_type new_size) {
-      _buffer.resize(new_size);
+      _size = std::min(_size, new_size);
 
+      _head = _size ? 0         : 1;
+      _tail = _size ? _size - 1 : 0;
+
+      _buffer.resize(new_size);
     }
     JM_CB_CONSTEXPR size_type capacity() const JM_CB_NOEXCEPT {
       return _buffer.size();
@@ -338,9 +345,7 @@ namespace jm {
 
     JM_CB_CXX14_CONSTEXPR void clear() JM_CB_NOEXCEPT
     {
-      while (_size != 0)
-        pop_back();
-
+      _size = 0;
       _head = 1;
       _tail = 0;
     }

@@ -1,10 +1,13 @@
 include ( cmake/get_cpm.cmake )
 
-function (add_catch_and_benchmark)
+function (add_test_and_benchmark)
 	CPMAddPackage(
-	  NAME Catch2
-	  GITHUB_REPOSITORY catchorg/Catch2
-	  VERSION 2.5.0
+	  NAME googletest
+	  GITHUB_REPOSITORY google/googletest
+	  GIT_TAG 703bd9c
+	  OPTIONS
+	    "BUILD_GMOCK OFF"
+		"gtest_force_shared_crt on"
 	)
 	
 	CPMAddPackage(

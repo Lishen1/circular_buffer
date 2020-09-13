@@ -9,13 +9,13 @@ namespace jm {
       inline static JM_CB_CONSTEXPR std::size_t increment(std::size_t value, std::size_t max_value)
         JM_CB_NOEXCEPT
       {
-        return (value + 1) % max_value;
+        return max_value ? (value + 1) % max_value : 0;
       }
 
       inline static JM_CB_CONSTEXPR std::size_t decrement(std::size_t value, std::size_t max_value)
         JM_CB_NOEXCEPT
       {
-        return (value + max_value - 1) % max_value;
+        return max_value ? (value + max_value - 1) % max_value : 0;
       }
     };
 
