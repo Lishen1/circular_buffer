@@ -81,12 +81,12 @@ namespace jm {
 
       JM_CB_CONSTEXPR reference operator*() const JM_CB_NOEXCEPT
       {
-        return (_buf + _pos)->_value;
+        return *(_buf + _pos);
       }
 
       JM_CB_CONSTEXPR pointer operator->() const JM_CB_NOEXCEPT
       {
-        return JM_CB_ADDRESSOF((_buf + _pos)->_value);
+        return JM_CB_ADDRESSOF(*(_buf + _pos));
       }
 
       JM_CB_CXX14_CONSTEXPR cb_iterator& operator++() JM_CB_NOEXCEPT

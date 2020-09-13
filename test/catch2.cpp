@@ -816,11 +816,12 @@ TEST_CASE("dynamic cb_iterator complies to InputIterator")
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 
+
 TEST_CASE("Eigen custom allocation Vector3f")
 {
    
-    jm::dynamic_circular_buffer<Eigen::Vector3f, Eigen::aligned_allocator< jm::detail::optional_storage<Eigen::Vector3f> >> buf1(8);
-    jm::dynamic_circular_buffer<Eigen::Vector3f, Eigen::aligned_allocator< jm::detail::optional_storage<Eigen::Vector3f> >> buf2(8);
+    jm::dynamic_circular_buffer<Eigen::Vector3f, Eigen::aligned_allocator< Eigen::Vector3f >> buf1(8);
+    jm::dynamic_circular_buffer<Eigen::Vector3f, Eigen::aligned_allocator< Eigen::Vector3f >> buf2(8);
 
     for (int i = 0; i < 128; ++i) {
       buf1.push_back(Eigen::Vector3f::Random());
