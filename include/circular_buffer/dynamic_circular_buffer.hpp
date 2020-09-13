@@ -60,7 +60,7 @@ namespace jm {
 
     explicit
       dynamic_circular_buffer(size_type count)
-      : _head(0), _tail(count - 1), _size(0), _buffer(count)
+      : _head(1), _tail(0), _size(0), _buffer(count)
     {
     }
 
