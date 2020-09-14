@@ -5,10 +5,10 @@
 
 namespace jm {
 
-  template<typename T, class Allocator = std::allocator<detail::optional_storage<T>>>
+  template<typename T, class Allocator = std::allocator<T>>
   class dynamic_circular_buffer {
   public:
-    typedef std::vector<detail::optional_storage<T>, Allocator>    container;
+    typedef std::vector<T, Allocator>    container;
     typedef T                                                      value_type;
     typedef std::size_t                                            size_type;
     typedef std::ptrdiff_t                                         difference_type;
@@ -16,8 +16,8 @@ namespace jm {
     typedef const T& const_reference;
     typedef T* pointer;
     typedef const T* const_pointer;
-    typedef detail::cb_iterator<detail::optional_storage<T>, T, 0> iterator;
-    typedef detail::cb_iterator<const detail::optional_storage<T>, const T, 0>
+    typedef detail::cb_iterator<T, T, 0> iterator;
+    typedef detail::cb_iterator<const T, const T, 0>
       const_iterator;
     typedef std::reverse_iterator<iterator>       reverse_iterator;
     typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
@@ -31,7 +31,7 @@ namespace jm {
     size_type    _size;
     container    _buffer;
 
-    inline void destroy(size_type idx) JM_CB_NOEXCEPT { _buffer[idx]._value.~T(); }
+    inline void destroy(size_type idx) JM_CB_NOEXCEPT { /*_buffer[idx].~T();*/ }
 
     inline void copy_buffer(const dynamic_circular_buffer& other)
     {
@@ -60,7 +60,7 @@ namespace jm {
 
     explicit
       dynamic_circular_buffer(size_type count)
-      : _head(0), _tail(count - 1), _size(count), _buffer(count)
+      : _head(1), _tail(0), _size(0), _buffer(count)
     {
     }
 
@@ -74,8 +74,10 @@ namespace jm {
           "dynamic_circular_buffer<T, N>(size_type count, const T&) count exceeded N");
 
       if (JM_CB_LIKELY(_size != 0))
-        for (size_type i = 0; i < count; ++i)
-          new(JM_CB_ADDRESSOF(_buffer[i])) T(value);
+        for (size_type i = 0; i < count; ++i) {
+          _buffer[i] = value;
+          //new(JM_CB_ADDRESSOF(_buffer[i])) T(value);
+        }
       else
         _head = 1;
     }
@@ -90,7 +92,8 @@ namespace jm {
             throw std::out_of_range(
               "dynamic_circular_buffer<T, N>(InputIt first, InputIt last) distance exceeded N");
 
-          new(JM_CB_ADDRESSOF(_buffer[_size])) T(*first);
+          _buffer[_size] = T(*first);
+          //new(JM_CB_ADDRESSOF(_buffer[_size])) T(*first);
         }
 
         _tail = _size - 1;
@@ -112,7 +115,8 @@ namespace jm {
 
       auto buf_ptr = _buffer.begin();
       for (auto it = init.begin(), end = init.end(); it < end; ++it, ++buf_ptr) {
-        new(JM_CB_ADDRESSOF(*buf_ptr)) T(*it);
+        *buf_ptr = *it;
+        //new(JM_CB_ADDRESSOF(*buf_ptr)) T(*it);
       }
 
     }
@@ -147,28 +151,20 @@ namespace jm {
 
     /// capacity
     JM_CB_CONSTEXPR void reserve(size_type new_cap) {
-      if (JM_CB_UNLIKELY(!_buffer.empty())) throw std::runtime_error("reserve called once");
+      _size = 0;
+      _head = 1;
+      _tail = 0;
 
-      _buffer = container(new_cap);
+      _buffer.resize(new_cap);
     }
 
     JM_CB_CONSTEXPR void resize(size_type new_size) {
-      if (JM_CB_UNLIKELY(new_size > _buffer.size())) throw std::runtime_error("new_cap > max_size()");
+      _size = std::min(_size, new_size);
 
-      const auto current_size = size();
-      difference_type count = static_cast<difference_type>(new_size - current_size);
-      const bool isexpend = count >= 0;
+      _head = _size ? 0         : 1;
+      _tail = _size ? _size - 1 : 0;
 
-      if (JM_CB_LIKELY(isexpend)) {
-        while (count--) {
-          push_back({});
-        }
-      }
-      else {
-        while (count++) {
-          pop_back();
-        }
-      }
+      _buffer.resize(new_size);
     }
     JM_CB_CONSTEXPR size_type capacity() const JM_CB_NOEXCEPT {
       return _buffer.size();
@@ -185,22 +181,22 @@ namespace jm {
     /// element access
     JM_CB_CXX14_CONSTEXPR reference front() JM_CB_NOEXCEPT
     {
-      return _buffer[_head]._value;
+      return _buffer[_head];
     }
 
     JM_CB_CONSTEXPR const_reference front() const JM_CB_NOEXCEPT
     {
-      return _buffer[_head]._value;
+      return _buffer[_head];
     }
 
     JM_CB_CXX14_CONSTEXPR reference back() JM_CB_NOEXCEPT
     {
-      return _buffer[_tail]._value;
+      return _buffer[_tail];
     }
 
     JM_CB_CONSTEXPR const_reference back() const JM_CB_NOEXCEPT
     {
-      return _buffer[_tail]._value;
+      return _buffer[_tail];
     }
 
     JM_CB_CXX14_CONSTEXPR pointer data() JM_CB_NOEXCEPT
@@ -221,11 +217,12 @@ namespace jm {
         new_tail = _head;
         _head = wrapper_t::increment(_head, _buffer.size());
         --_size;
-        _buffer[new_tail]._value = value;
+        _buffer[new_tail] = value;
       }
       else {
         new_tail = wrapper_t::increment(_tail, _buffer.size());
-        new(JM_CB_ADDRESSOF(_buffer[new_tail])) T(value);
+        _buffer[new_tail] = T(value);
+        //new(JM_CB_ADDRESSOF(_buffer[new_tail])) T(value);
       }
 
       _tail = new_tail;
@@ -239,11 +236,12 @@ namespace jm {
         new_head = _tail;
         _tail = wrapper_t::decrement(_tail, _buffer.size());
         --_size;
-        _buffer[new_head]._value = value;
+        _buffer[new_head] = value;
       }
       else {
         new_head = wrapper_t::decrement(_head, _buffer.size());
-        new(JM_CB_ADDRESSOF(_buffer[new_head])) T(value);
+        _buffer[new_head] = T(value);
+        //new(JM_CB_ADDRESSOF(_buffer[new_head])) T(value);
       }
 
       _head = new_head;
@@ -257,12 +255,13 @@ namespace jm {
         new_tail = _head;
         _head = wrapper_t::increment(_head, _buffer.size());
         --_size;
-        _buffer[new_tail]._value = detail::move_if_noexcept_assign(value);
+        _buffer[new_tail] = detail::move_if_noexcept_assign(value);
       }
       else {
         new_tail = wrapper_t::increment(_tail, _buffer.size());
-        new(JM_CB_ADDRESSOF(_buffer[new_tail]))
-          T(std::move_if_noexcept(value));
+        _buffer[new_tail] = std::move_if_noexcept(value);
+        //new(JM_CB_ADDRESSOF(_buffer[new_tail]))
+          //T(std::move_if_noexcept(value));
       }
 
       _tail = new_tail;
@@ -276,12 +275,13 @@ namespace jm {
         new_head = _tail;
         _tail = wrapper_t::decrement(_tail, _buffer.size());
         --_size;
-        _buffer[new_head]._value = detail::move_if_noexcept_assign(value);
+        _buffer[new_head] = detail::move_if_noexcept_assign(value);
       }
       else {
         new_head = wrapper_t::decrement(_head, _buffer.size());
-        new(JM_CB_ADDRESSOF(_buffer[new_head]))
-          T(std::move_if_noexcept(value));
+        _buffer[new_head] = std::move_if_noexcept(value);
+        //new(JM_CB_ADDRESSOF(_buffer[new_head]))
+          //T(std::move_if_noexcept(value));
       }
 
       _head = new_head;
@@ -301,8 +301,9 @@ namespace jm {
       else
         new_tail = wrapper_t::increment(_tail, _buffer.size());
 
-      new(JM_CB_ADDRESSOF(_buffer[new_tail]))
-        value_type(std::forward<Args>(args)...);
+      _buffer[new_tail] = value_type(std::forward<Args>(args)...);
+      //new(JM_CB_ADDRESSOF(_buffer[new_tail]))
+      //  value_type(std::forward<Args>(args)...);
       _tail = new_tail;
       ++_size;
     }
@@ -319,9 +320,9 @@ namespace jm {
       }
       else
         new_head = wrapper_t::decrement(_head, _buffer.size());
-
-      new(JM_CB_ADDRESSOF(_buffer[new_head]))
-        value_type(std::forward<Args>(args)...);
+        _buffer[new_head] = value_type(std::forward<Args>(args)...);
+      //new(JM_CB_ADDRESSOF(_buffer[new_head]))
+        //value_type(std::forward<Args>(args)...);
       _head = new_head;
       ++_size;
     }
@@ -344,9 +345,7 @@ namespace jm {
 
     JM_CB_CXX14_CONSTEXPR void clear() JM_CB_NOEXCEPT
     {
-      while (_size != 0)
-        pop_back();
-
+      _size = 0;
       _head = 1;
       _tail = 0;
     }

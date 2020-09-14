@@ -1,6 +1,8 @@
 #ifndef JM_CIRCULAR_BUFFER_CONFIG_HPP
 #define JM_CIRCULAR_BUFFER_CONFIG_HPP
 
+#define JM_CIRCULAR_BUFFER_CXX14
+
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
