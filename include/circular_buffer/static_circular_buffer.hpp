@@ -144,31 +144,37 @@ namespace jm {
     /// element access
     JM_CB_CXX14_CONSTEXPR reference front() JM_CB_NOEXCEPT
     {
+      JM_ASSERT(!empty(), "There are empty buffer");
       return _buffer[_head]._value;
     }
 
     JM_CB_CONSTEXPR const_reference front() const JM_CB_NOEXCEPT
     {
+      JM_ASSERT(!empty(), "There are empty buffer");
       return _buffer[_head]._value;
     }
 
     JM_CB_CXX14_CONSTEXPR reference back() JM_CB_NOEXCEPT
     {
+      JM_ASSERT(!empty(), "There are empty buffer");
       return _buffer[_tail]._value;
     }
 
     JM_CB_CONSTEXPR const_reference back() const JM_CB_NOEXCEPT
     {
+      JM_ASSERT(!empty(), "There are empty buffer");
       return _buffer[_tail]._value;
     }
 
     JM_CB_CXX14_CONSTEXPR pointer data() JM_CB_NOEXCEPT
     {
+      JM_ASSERT(!empty(), "There are empty buffer");
       return JM_CB_ADDRESSOF(_buffer[0]._value);
     }
 
     JM_CB_CONSTEXPR const_pointer data() const JM_CB_NOEXCEPT
     {
+      JM_ASSERT(!empty(), "There are empty buffer");
       return JM_CB_ADDRESSOF(_buffer[0]._value);
     }
 
@@ -287,6 +293,7 @@ namespace jm {
 
     JM_CB_CXX14_CONSTEXPR void pop_back() JM_CB_NOEXCEPT
     {
+      JM_ASSERT(!empty(), "There are empty buffer");
       size_type old_tail = _tail;
       --_size;
       _tail = wrapper_t::decrement(_tail);
@@ -295,6 +302,7 @@ namespace jm {
 
     JM_CB_CXX14_CONSTEXPR void pop_front() JM_CB_NOEXCEPT
     {
+      JM_ASSERT(!empty(), "There are empty buffer");
       size_type old_head = _head;
       --_size;
       _head = wrapper_t::increment(_head);

@@ -15,6 +15,9 @@
 #include <initializer_list>
 #endif // !defined(JM_CIRCULAR_BUFFER_CXX_OLD)
 
+#include <cassert>
+
+#define JM_ASSERT(exp, msg) assert(((void)msg, exp))
 
 #ifndef JM_CIRCULAR_BUFFER_CXX_OLD
 #define JM_CB_CONSTEXPR constexpr

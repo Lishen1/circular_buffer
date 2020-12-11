@@ -81,11 +81,13 @@ namespace jm {
 
       JM_CB_CONSTEXPR reference operator*() const JM_CB_NOEXCEPT
       {
+        JM_ASSERT(_left_in_forward, "can't dereference out of range vector iterator");
         return *(_buf + _pos);
       }
 
       JM_CB_CONSTEXPR pointer operator->() const JM_CB_NOEXCEPT
       {
+        JM_ASSERT(_left_in_forward, "can't dereference out of range vector iterator");
         return JM_CB_ADDRESSOF(*(_buf + _pos));
       }
 

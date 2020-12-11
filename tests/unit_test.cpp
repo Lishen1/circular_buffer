@@ -739,6 +739,26 @@ TEST(iterators, dynamic_cb_iterator_complies_stl) {
   ++r; // r is incrementable
   static_assert(std::is_same<decltype(++r), decltype(r)&>::value,
     "++it doesnt return It&");
+
+  struct Foo {
+    int a;
+    int b;
+  };
+  jm::dynamic_circular_buffer<Foo> foo_test(4);
+  foo_test.push_back({});
+  foo_test.begin()->a = 42;
+  foo_test.push_back({});
+  foo_test.push_back({});
+  foo_test.push_back({});
+  foo_test.push_back({});
+  foo_test.push_back({});
+  foo_test.push_back({});
+  foo_test.pop_back();
+  foo_test.pop_back();
+  foo_test.pop_back();
+  foo_test.begin()->a = 42;
+  foo_test.push_back({});
+  foo_test.begin()->a = 42;
 }
 TEST(iterators, static_cb_iterator_complies_InputIterator) {
   using cbt = jm::static_circular_buffer<int, 4>;
